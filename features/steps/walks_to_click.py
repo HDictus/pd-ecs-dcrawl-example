@@ -11,7 +11,7 @@ def step_impl(context):
 @given(u'a character is selected')
 def step_impl(context):
     context.selected_character = context.encounter.add_character()
-
+    context.encounter.events.select_character(context.selected_character)
 
 @when(u'The mouse is clicked at a position')
 def step_impl(context):
