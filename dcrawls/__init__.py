@@ -58,11 +58,21 @@ class Movement(System):
         but not further. If they have reached their destination, set their velocity to 0
         """
         diffs = self.moving[move_command] - self.moving[position]
-        print(self.moving)
-        print(diffs)
-        directions = diffs / np.linalg.norm(diffs, axis=1)
-        self.moving[velocity] += directions * self.moving[run_acceleration]
+        distances = np.linalg.norm(diffs.values, axis=1)[..., np.newaxis]
+        directions = diffs / distances
+        self.moving[velocity] += directions * self.moving[run_acceleration].values
         self.moving[position] += self.moving[velocity]
+        self._stop_at_point(distances)
+
+    def _stop_at_point(self, distances):
+        """
+        When velocity is greater than the distance to the target, stop short
+        """
+
+        passing_point = self.moving.index[distances[..., 0] < np.linalg.norm(self.moving[velocity].values, axis=1)]
+        self.moving.loc[passing_point, position] = self.moving.loc[passing_point, move_command].values
+        self.moving.loc[passing_point, velocity] = 0
+        self.world.take(passing_point, move_command)
 
 
 class Attacking(System):
@@ -106,4 +116,4 @@ class Encounter(World):
     def add_character(self):
         return self.add_entities({position: {X: 123, Y: 456},
                                   velocity: {X: 0, Y: 0},
-                                  acceleration: {acceleration}})
+                                  run_acceleration: {ACCEL: 1}})

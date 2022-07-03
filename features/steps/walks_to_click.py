@@ -2,7 +2,7 @@ import dcrawls as dc
 import numpy as np
 
 def _in_same_direction(vec1, vec2):
-    return np.allclose(vec1[dc.X] / vec1[dc.Y], vec2[dc.X] / vec1[dc.Y])
+    return np.allclose(vec1[dc.X] / vec1[dc.Y], vec2[dc.X] / vec2[dc.Y])
 
 @given(u'the game is in an encounter')
 def step_impl(context):
@@ -27,26 +27,33 @@ def step_impl(context):
     target_position = context.position_pressed
     diff = target_position - current_position
     distance = np.linalg.norm(diff)
-    displacementsize = 0
+    displacementsize = -1
     while distance > 0:
         context.encounter.events.update(0.1)
         new_position = context.encounter[dc.position]\
                               .loc[context.selected_character]
         displacement = new_position - current_position
         new_displacementsize = np.linalg.norm(displacement)
-        assert _in_same_direction(displacement, diff)
-        assert displacmentsize < new_displacementsize
+        diff = target_position - new_position
+        distance = np.linalg.norm(diff)
+        if distance == 0:
+            break
+        try:
+            assert _in_same_direction(displacement, diff)
+            assert displacementsize < new_displacementsize, f'{displacementsize} < {new_displacementsize}'
+        except AssertionError:
+            __import__("pdb").set_trace()
+
         displacementsize = new_displacementsize
         current_position = new_position
-        diff = target_position - current_position
-        distance = np.linalg.norm(diff)
+
 
 
 @then(u'the character should stop at that position')
 def step_impl(context):
-    assert context.encounter[dc.position]\
-                  .loc[context.selected_character] ==\
-                  context.position_pressed
+    assert np.allclose(
+        context.encounter[dc.position].loc[context.selected_character],
+        context.position_pressed)
     return
 
 
