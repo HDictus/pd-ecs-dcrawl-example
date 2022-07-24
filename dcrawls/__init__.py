@@ -38,11 +38,12 @@ class Movement(System):
 
     def move_command(self, character, x, y):
         """queue a move command for character to position x, y"""
-        if character[0] in self.can_move.index:
+
+        if character[0] in self.can_move.ids:
             self.world.give(character,
                             {move_command: {X: x, Y: y}})
             return
-        comps = {column[0] for column in self.can_move}
+        comps = {column[0] for column in self.can_move.components}
         missing = []
         for comp in comps:
             if character[0] not in self.world[comp].index:
@@ -57,22 +58,26 @@ class Movement(System):
         update their positions by their velocity, up to their destination
         but not further. If they have reached their destination, set their velocity to 0
         """
-        diffs = self.moving[move_command] - self.moving[position]
+        posns, vels, tgts, accels = self.moving.data()
+        diffs = tgts - posns
         distances = np.linalg.norm(diffs.values, axis=1)[..., np.newaxis]
         directions = diffs / distances
-        self.moving[velocity] += directions * self.moving[run_acceleration].values
-        self.moving[position] += self.moving[velocity]
-        self._stop_at_point(distances)
 
-    def _stop_at_point(self, distances):
+        vels += directions * accels.values
+        posns += vels
+        # __import__("pdb").set_trace()
+
+        self._stop_at_point(posns, vels, tgts, distances)
+        self.world.update({position: posns, velocity: vels})
+
+    def _stop_at_point(self, posns, vels, tgts, distances):
         """
         When velocity is greater than the distance to the target, stop short
         """
-
-        passing_point = self.moving.index[distances[..., 0] < np.linalg.norm(self.moving[velocity].values, axis=1)]
-        self.moving.loc[passing_point, position] = self.moving.loc[passing_point, move_command].values
-        self.moving.loc[passing_point, velocity] = 0
-        self.world.take(passing_point, move_command)
+        passing_point = distances[..., 0] < np.linalg.norm(vels.values, axis=1)
+        posns[passing_point] = tgts[passing_point]
+        vels[passing_point] = 0
+        self.world.take(posns.index[passing_point], move_command)
 
 
 class Attacking(System):
