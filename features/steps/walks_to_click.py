@@ -22,7 +22,6 @@ def step_impl(context):
 
 @then(u'the character should run there with increasing speed')
 def step_impl(context):
-
     current_position = context.encounter[dc.position]\
                               .loc[context.selected_character]
     target_position = context.position_pressed
