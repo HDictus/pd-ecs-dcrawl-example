@@ -13,7 +13,7 @@ if sys.version_info < (3, 6):
 with open("README.rst", encoding="utf-8") as f:
     README = f.read()
 
-VERSION = imp.load_source("", "dcrawls.version.py").__version__
+VERSION = imp.load_source("", "dcrawls/version.py").__version__
 
 print(find_packages)
 
@@ -27,7 +27,7 @@ setup(
     long_description_content_type="text/x-rst",
     license="MIT",
     install_requires=[
-        'pd_ecs @ git+https://github.com/HDictus/pd-ecs/',
+        'pd_ecs @ git+https://HDictus@github.com/HDictus/pd-ecs/',
         'pyglet',
         'behave'
     ],
