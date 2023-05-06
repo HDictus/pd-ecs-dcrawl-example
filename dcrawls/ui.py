@@ -25,6 +25,7 @@ def game_window(world):
     def update(dt):
         window.fps = 1 / dt
         dc.move(world, dt)
+
     pyglet.clock.schedule_interval(update, 1/800)
 
     @window.event

@@ -34,7 +34,6 @@ def move(world, dt):
         passing_point = distances[..., 0] < np.linalg.norm(vels.values, axis=-1)
         posns[passing_point] = tgts[passing_point]
         vels[passing_point] = 0
-        print(distances, np.linalg.norm(vels.values, axis=-1))
         world.take(posns.index[passing_point], move_command)
         # TODO: we should be aware of the possibility of removing a component from an entity,
         # and then accidentally re-adding it with an .update()
@@ -42,8 +41,8 @@ def move(world, dt):
 
     moving = world[MOVING]
     targets = moving[move_command]
-    positions = moving[position]
-    velocities = moving[velocity]
+    positions = moving[position].copy()
+    velocities = moving[velocity].copy()
     acceleration = moving[run_acceleration]
 
     diffs = targets - positions
