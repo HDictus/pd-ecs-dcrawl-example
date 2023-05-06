@@ -5,10 +5,13 @@ import pyglet
 import cProfile
 
 
-world = dc.Encounter()
-ui.Render(world)
-world.events.select_character(
-    world.add_character())
-game = ui.Window(world)
+world = dc.World()
+world.add_entities({
+    dc.position: {dc.X: 25, dc.Y: 25},
+    dc.velocity: {dc.X: 0, dc.Y: 0},
+    dc.run_acceleration: {dc.ACCEL: 10},
+    dc.selected: {dc.BY: 1}})
+
+game = ui.game_window(world)
 
 pyglet.app.run()
