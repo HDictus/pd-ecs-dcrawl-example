@@ -31,7 +31,9 @@ def move(world, dt):
         """
         When velocity is greater than the distance to the target, stop short
         """
-        passing_point = distances[..., 0] < np.linalg.norm(vels.values, axis=-1)
+        passing_point = (
+            distances[..., 0] <
+            np.linalg.norm(vels.values, axis=-1)*dt)
         posns[passing_point] = tgts[passing_point]
         vels[passing_point] = 0
         world.take(posns.index[passing_point], move_command)

@@ -54,8 +54,9 @@ def test_moving_units_stop_when_target_is_reached():
          dc.run_acceleration: {dc.ACCEL: np.sqrt(200)},
          dc.move_command: {dc.X: [101, 101], dc.Y: [101, 101]}})
 
-    dc.move(world, 1)
-
+    dc.move(world, 0.5)
+    assert len(world[dc.move_command]) == 2
+    dc.move(world, 0.5)
     assert moving[1] not in world[dc.move_command].index
     assert np.allclose(world[dc.position].loc[moving[1]].values,
                        [101, 101])
