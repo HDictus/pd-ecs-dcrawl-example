@@ -1,10 +1,12 @@
 from pd_ecs import World, Component
 import numpy as np
 
+
 X = 'x (meters)'
-Y ='y (meters)'
+Y = 'y (meters)'
 ACCEL = 'accelration (m/s^2)'
-BY='by'
+BY = 'by'
+
 
 move_command = Component(X, Y, name='move_command')
 position = Component(X, Y, name='position')
