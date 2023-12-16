@@ -15,7 +15,7 @@ run_acceleration = Component(ACCEL, name='run_acceleration')
 selected = Component('by', name='selected')
 
 
-CAN_MOVE = (position, velocity, run_acceleration)
+CAN_MOVE = (position, velocity, run_acceleration, ~move_command)
 
 
 def initiate_movement(world, x, y):
