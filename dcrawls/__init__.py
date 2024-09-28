@@ -2,17 +2,16 @@ from pd_ecs import World, Component
 import numpy as np
 
 
-X = 'x (meters)'
-Y = 'y (meters)'
-ACCEL = 'accelration (m/s^2)'
-BY = 'by'
+X = Component('x (meters)')
+Y = Component('y (meters)')
+ACCEL = Component('accelration (m/s^2)')
 
 
-move_command = Component(X, Y, name='move_command')
-position = Component(X, Y, name='position')
-velocity = Component(X, Y, name='velocity')
-run_acceleration = Component(ACCEL, name='run_acceleration')
-selected = Component('by', name='selected')
+move_command = Component(x=X, y=Y, name='move_command')
+position = Component(x=X, y=Y, name='position')
+velocity = Component(x=X, y=Y, name='velocity')
+run_acceleration = Component(name='run_acceleration')
+selected = Component(name='selected by')
 
 
 CAN_MOVE = (position, velocity, run_acceleration, ~move_command)

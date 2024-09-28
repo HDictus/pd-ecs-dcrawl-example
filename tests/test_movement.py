@@ -7,15 +7,17 @@ def test_selected_units_are_commanded_to_move():
     world = dc.World()
 
     selected = world.add_entities(
-        {dc.position: {dc.X: [10, 20, 30], dc.Y: [30, 40, 50]},
-         dc.velocity: {dc.X: 0, dc.Y: 0},
-         dc.run_acceleration: {dc.ACCEL: 10},
-         dc.selected: {dc.BY: 1}})
+        {dc.position.x: [10, 20, 30],
+         dc.position.Y: [30, 40, 50],
+         dc.velocity.x: 0, 
+         dc.velocity.y: 0,
+         dc.run_acceleration: 10,
+         dc.selected: 1})
 
     world.add_entities(
-        {dc.position: {dc.X: [10, 20, 30], dc.Y: [30, 40, 50]},
-         dc.velocity: {dc.X: 0, dc.Y: 0},
-         dc.run_acceleration: {dc.ACCEL: 10}})
+        {dc.position.x: [10, 20, 30], dc.position.y: [30, 40, 50],
+         dc.velocity.x: 0, dc.velocity.y: 0,
+         dc.run_acceleration: 10})
 
     dc.initiate_movement(world, 400, 500)
     commanded = world[dc.move_command]
@@ -29,10 +31,10 @@ def test_moving_units_accelerate_and_increment_by_vel():
     world = dc.World()
 
     moving  = world.add_entities(
-        {dc.position: {dc.X: [0, 0], dc.Y: [10, 10]},
-         dc.velocity: {dc.X: [0, 10], dc.Y: [0, -10]},
-         dc.run_acceleration: {dc.ACCEL: np.sqrt(200)},
-         dc.move_command: {dc.X: [100, 100], dc.Y: [100, 100]}})
+        {dc.position.x: [0, 0], dc.position.y: [10, 10],
+         dc.velocity.x: [0, 10], dc.velocity.y: [0, -10],
+         dc.run_acceleration: np.sqrt(200),
+         dc.move_command.x: [100, 100], dc.move_command.y: [100, 100]})
 
     dc.move(world, 1)
     # TODO: this sort of works but error is about 0.5
@@ -49,10 +51,10 @@ def test_moving_units_stop_when_target_is_reached():
     world = dc.World()
 
     moving = world.add_entities(
-        {dc.position: {dc.X: [0, 80], dc.Y: [0, 80]},
-         dc.velocity: {dc.X: [20, 20], dc.Y: [20, 20]},
-         dc.run_acceleration: {dc.ACCEL: np.sqrt(200)},
-         dc.move_command: {dc.X: [101, 101], dc.Y: [101, 101]}})
+        {dc.position.x: [0, 80], dc.position.y: [0, 80],
+         dc.velocity.x: [20, 20], dc.velocity.y: [20, 20],
+         dc.run_acceleration: np.sqrt(200),
+         dc.move_command.x: [101, 101], dc.move_command.y: [101, 101]})
 
     dc.move(world, 0.5)
     assert len(world[dc.move_command]) == 2
