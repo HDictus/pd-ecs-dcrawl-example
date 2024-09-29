@@ -8,7 +8,7 @@ def test_selected_units_are_commanded_to_move():
 
     selected = world.add_entities(
         {dc.position.x: [10, 20, 30],
-         dc.position.Y: [30, 40, 50],
+         dc.position.y: [30, 40, 50],
          dc.velocity.x: 0, 
          dc.velocity.y: 0,
          dc.run_acceleration: 10,
@@ -55,7 +55,7 @@ def test_moving_units_stop_when_target_is_reached():
          dc.velocity.x: [20, 20], dc.velocity.y: [20, 20],
          dc.run_acceleration: np.sqrt(200),
          dc.move_command.x: [101, 101], dc.move_command.y: [101, 101]})
-
+    
     dc.move(world, 0.5)
     assert len(world[dc.move_command]) == 2
     dc.move(world, 0.5)

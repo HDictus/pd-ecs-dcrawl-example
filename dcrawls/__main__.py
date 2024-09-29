@@ -7,11 +7,11 @@ import cProfile
 # TODO: some bug, seems to snap to destination too soon
 world = dc.World()
 world.add_entities({
-    dc.position: {dc.X: 25, dc.Y: 25},
-    dc.velocity: {dc.X: 0, dc.Y: 0},
-    dc.run_acceleration: {dc.ACCEL: 50},
-    dc.selected: {dc.BY: 1}})
-
+    dc.position.x: 25, dc.position.y: 25,
+    dc.velocity.x: 0, dc.velocity.y: 0,
+    dc.run_acceleration: 900,
+    dc.selected: [1]})
+print(world[dc.position][dc.X].dtype)
 game = ui.game_window(world)
 
 pyglet.app.run()
