@@ -1,6 +1,6 @@
 """Minimalistic dungeon crawler."""
 import numpy as np
-from pd_ecs import Component, World
+from pd_ecs import Component, World, gets
 
 X = Component("x (meters)", dtype=np.float32)
 Y = Component("y (meters)", dtype=np.float32)
@@ -12,6 +12,7 @@ position = Component(x=X, y=Y, name="position")
 velocity = Component(x=X, y=Y, name="velocity")
 run_acceleration = Component(name="run_acceleration")
 selected = Component(name="selected by")
+size = Component("size (radius)")
 
 
 CAN_MOVE = [position, velocity, run_acceleration, ~move_command]
