@@ -5,7 +5,7 @@ import pyglet
 import cProfile
 
 # TODO: some bug, seems to snap to destination too soon
-world = dc.World()
+world = dc.Encounter()
 world.add_entities({
     dc.position.x: 25, dc.position.y: 25,
     dc.velocity.x: 0, dc.velocity.y: 0,

@@ -19,7 +19,9 @@ CAN_MOVE = [position, velocity, run_acceleration, ~move_command]
 
 def initiate_movement(world, x, y):
     will_move = world[[selected, ] + CAN_MOVE]
+    print(len(will_move))
     world.give(will_move.index, {move_command.x: x, move_command.y: y})
+    world.take(will_move.index, selected)
     return
 
 
@@ -36,7 +38,7 @@ def move(world, dt):
             distances[..., 0] <
             np.linalg.norm(vels.values, axis=-1)*dt)
         posns[passing_point] = tgts[passing_point]
-        vels[passing_point] = 0
+        vels[passing_point] = 0.
 
         world.take(posns.index[passing_point], move_command)
         # TODO: we should be aware of the possibility of removing a component from an entity,
@@ -57,3 +59,30 @@ def move(world, dt):
     positions += velocities * dt
     _stop_at_target(positions, velocities, targets, distances)
     world.update({position: positions, velocity: velocities})
+
+
+def select_idle(world):
+    if len(world[selected]) > 0:
+        return
+    idle = world[CAN_MOVE]
+    if len(idle) == 0:
+        return
+    world.give(idle.index.values[:1], {selected: 1})
+
+
+class Encounter(World):
+    
+    def time_passes(self, dt):
+        move(self, dt)
+        select_idle(self)
+
+    def add_character(self):
+        return self.add_entities(
+            {position.x: 25, position.y: 25,
+             velocity.x: 0, velocity.y: 0,
+             run_acceleration: 900,
+             selected: [1]})
+
+    def select_character(self, char):
+        self.loc[char, selected] = True
+    

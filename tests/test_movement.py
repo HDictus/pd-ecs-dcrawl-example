@@ -31,7 +31,7 @@ def test_moving_units_accelerate_and_increment_by_vel():
     world = dc.World()
 
     moving  = world.add_entities(
-        {dc.position.x: [0, 0], dc.position.y: [10, 10],
+        {dc.position.x: [0, 10], dc.position.y: [0, 10],
          dc.velocity.x: [0, 10], dc.velocity.y: [0, -10],
          dc.run_acceleration: np.sqrt(200),
          dc.move_command.x: [100, 100], dc.move_command.y: [100, 100]})
@@ -41,11 +41,11 @@ def test_moving_units_accelerate_and_increment_by_vel():
     assert np.allclose(
         world[dc.velocity].loc[moving].values,
         [[10, 10],
-         [10, 0]])
+         [20, 0]], atol=0.5)
     assert np.allclose(
         world[dc.position].loc[moving].values,
         [[10, 10],
-         [20, 10]])
+         [30, 10]], atol=0.5)
 
 def test_moving_units_stop_when_target_is_reached():
     world = dc.World()
@@ -56,9 +56,30 @@ def test_moving_units_stop_when_target_is_reached():
          dc.run_acceleration: np.sqrt(200),
          dc.move_command.x: [101, 101], dc.move_command.y: [101, 101]})
     
-    dc.move(world, 0.5)
+    for _ in range(50):
+        dc.move(world, 0.01)
     assert len(world[dc.move_command]) == 2
-    dc.move(world, 0.5)
+    for _ in range(50):
+        dc.move(world, 0.01)
     assert moving[1] not in world[dc.move_command].index
     assert np.allclose(world[dc.position].loc[moving[1]].values,
                        [101, 101])
+
+
+def test_select_one_idle():
+    world = dc.Encounter()
+    movers = world.add_entities(
+        {dc.position.x: [0, 80], dc.position.y: [0, 80],
+         dc.velocity.x: [20, 20], dc.velocity.y: [20, 20],
+         dc.run_acceleration: np.sqrt(200)})
+    dc.select_idle(world)
+    
+    assert all(world[dc.selected].index == [0])
+    dc.select_idle(world)
+    assert all(world[dc.selected].index == [0])
+    dc.initiate_movement(world, 100, 1232)
+    dc.select_idle(world)
+    assert all(world[dc.selected].index == [1])
+    dc.initiate_movement(world, 100, 1232)
+    dc.select_idle(world)
+    assert len(world[dc.selected].index) == 0
