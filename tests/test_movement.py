@@ -47,6 +47,7 @@ def test_moving_units_accelerate_and_increment_by_vel():
         [[10, 10],
          [30, 10]], atol=0.5)
 
+
 def test_moving_units_stop_when_target_is_reached():
     world = dc.World()
 
@@ -73,7 +74,7 @@ def test_select_one_idle():
          dc.velocity.x: [20, 20], dc.velocity.y: [20, 20],
          dc.run_acceleration: np.sqrt(200)})
     dc.select_idle(world)
-    
+
     assert all(world[dc.selected].index == [0])
     dc.select_idle(world)
     assert all(world[dc.selected].index == [0])

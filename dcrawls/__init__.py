@@ -80,9 +80,8 @@ class Encounter(World):
         return self.add_entities(
             {position.x: 25, position.y: 25,
              velocity.x: 0, velocity.y: 0,
-             run_acceleration: 900,
-             selected: [1]})
+             run_acceleration: [900]})
 
     def select_character(self, char):
-        self.loc[char, selected] = True
+        self.give(char, {selected: 1})
     

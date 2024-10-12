@@ -67,15 +67,17 @@ def step_impl(context):
         [context.character1, context.character2],
         {dc.move_command.x: [1000, 1000], 
          dc.move_command.y: [1000, 1000]})
+    context.window.update(0.1)
 
 
 @when(u'one of these characaters becomes idle')
 def step_impl(context):
     context.encounter.take(context.character1, dc.move_command)
-
+    context.window.update(0.1)
 
 @then(u'time should stop')
 def step_impl(context):
+    context.window.update(0.1)
     assert context.window.time_multiplier < 1
 
 
