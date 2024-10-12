@@ -12,8 +12,11 @@ position = Component(x=X, y=Y, name="position")
 velocity = Component(x=X, y=Y, name="velocity")
 run_acceleration = Component(name="run_acceleration")
 selected = Component(name="selected by")
+player = Component("player")
 size = Component("size (radius)")
-
+targets_closest = Component("targets player", dtype=bool)
+health = Component(current=Component("current"), max=Component("max"), name="health")
+touch_damage = Component("touch damage")
 
 CAN_MOVE = [position, velocity, run_acceleration, ~move_command]
 
@@ -26,7 +29,7 @@ def initiate_movement(world, x, y):
         ]
         + CAN_MOVE
     ]
-    print(len(will_move))
+
     world.give(will_move.index, {move_command.x: x, move_command.y: y})
     world.take(will_move.index, selected)
 
@@ -68,17 +71,40 @@ def select_idle(world):
     """Select units that are idle."""
     if len(world[selected]) > 0:
         return
-    idle = world[CAN_MOVE]
+    idle = world[CAN_MOVE + [player]]
     if len(idle) == 0:
         return
     world.give(idle.index.values[:1], {selected: 1})
 
+
+def enemy_attacks(world, dt):
+    idle_enemies = world[[targets_closest, ~move_command]]
+    enemies = world[[position, touch_damage, size]]
+    players = world[[position, player, size, health]]
+    for _, e in enemies.iterrows():
+        nearest = None
+        distance = 1000000
+        for _, p in players.iterrows():
+            diff = e[position] - p[position]
+            dist = np.linalg.norm(diff)
+            in_contact = (dist <= e[size] + p[size]).iloc[0]
+            if in_contact:
+                world.loc[p.name, health.current] -= e[touch_damage].iloc[0] * dt
+            elif e.name in idle_enemies.index:
+                if dist < distance:
+                    distance = dist
+                    nearest = p
+
+        if nearest is not None:
+            p = nearest
+            world.give([e.name], {move_command.x: p[position.x], move_command.y: p[position.y]})
 
 class Encounter(World):
     """State manager for ingame encounters."""
 
     def time_passes(self, dt):
         """Main loop."""
+        enemy_attacks(self, dt)
         move(self, dt)
         select_idle(self)
 
@@ -91,6 +117,26 @@ class Encounter(World):
                 velocity.x: 0,
                 velocity.y: 0,
                 run_acceleration: [900],
+                health.max: 10,
+                size: 10,
+                player: True,
+                health.current: 10,
+            }
+        )
+
+    def add_enemy(self):
+        return self.add_entities(
+            {
+                position.x: 100,
+                position.y: 100,
+                velocity.x: 0,
+                velocity.y: 0,
+                run_acceleration: [100],
+                health.max: 10,
+                health.current: 10,
+                targets_closest: True,
+                touch_damage: 10,
+                size: 20,
             }
         )
 

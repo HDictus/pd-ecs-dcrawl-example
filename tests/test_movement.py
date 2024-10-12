@@ -92,11 +92,23 @@ def test_select_one_idle():
             dc.position.y: [0, 80],
             dc.velocity.x: [20, 20],
             dc.velocity.y: [20, 20],
+            dc.player: True,
             dc.run_acceleration: np.sqrt(200),
+            dc.move_command.x: [1, 1],
+            dc.move_command.y: [2, 2]
         }
     )
+    non_player = world.add_entities({          
+            dc.position.x: [0, 80],
+            dc.position.y: [0, 80],
+            dc.velocity.x: [20, 20],
+            dc.velocity.y: [20, 20],
+            dc.run_acceleration: np.sqrt(200)
+    })
     dc.select_idle(world)
-
+    assert len(world[dc.selected]) == 0
+    world.take(movers, dc.move_command)
+    dc.select_idle(world)
     assert all(world[dc.selected].index == [0])
     dc.select_idle(world)
     assert all(world[dc.selected].index == [0])
