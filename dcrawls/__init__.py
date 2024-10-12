@@ -1,49 +1,51 @@
-from pd_ecs import World, Component
+"""Minimalistic dungeon crawler."""
 import numpy as np
+from pd_ecs import Component, World
+
+X = Component("x (meters)", dtype=np.float32)
+Y = Component("y (meters)", dtype=np.float32)
+ACCEL = Component("accelration (m/s^2)", dtype=np.float32)
 
 
-X = Component('x (meters)', dtype=np.float32)
-Y = Component('y (meters)', dtype=np.float32)
-ACCEL = Component('accelration (m/s^2)', dtype=np.float32)
-
-
-move_command = Component(x=X, y=Y, name='move_command')
-position = Component(x=X, y=Y, name='position')
-velocity = Component(x=X, y=Y, name='velocity')
-run_acceleration = Component(name='run_acceleration')
-selected = Component(name='selected by')
+move_command = Component(x=X, y=Y, name="move_command")
+position = Component(x=X, y=Y, name="position")
+velocity = Component(x=X, y=Y, name="velocity")
+run_acceleration = Component(name="run_acceleration")
+selected = Component(name="selected by")
 
 
 CAN_MOVE = [position, velocity, run_acceleration, ~move_command]
 
 
 def initiate_movement(world, x, y):
-    will_move = world[[selected, ] + CAN_MOVE]
+    """Issue move command to selected units."""
+    will_move = world[
+        [
+            selected,
+        ]
+        + CAN_MOVE
+    ]
     print(len(will_move))
     world.give(will_move.index, {move_command.x: x, move_command.y: y})
     world.take(will_move.index, selected)
-    return
 
 
 MOVING = [position, velocity, move_command, run_acceleration]
 
 
 def move(world, dt):
+    """Accelerate commanded units toward target location."""
 
     def _stop_at_target(posns, vels, tgts, distances):
         """
         When velocity is greater than the distance to the target, stop short
         """
-        passing_point = (
-            distances[..., 0] <
-            np.linalg.norm(vels.values, axis=-1)*dt)
+        passing_point = distances[..., 0] < (
+            np.linalg.norm(vels.values, axis=-1) * dt)
         posns[passing_point] = tgts[passing_point]
-        vels[passing_point] = 0.
+        vels[passing_point] = 0.0
 
         world.take(posns.index[passing_point], move_command)
-        # TODO: we should be aware of the possibility of removing a component from an entity,
-        # and then accidentally re-adding it with an .update()
-        # what should the expected behavior be in this case?
 
     moving = world[MOVING]
 
@@ -62,6 +64,7 @@ def move(world, dt):
 
 
 def select_idle(world):
+    """Select units that are idle."""
     if len(world[selected]) > 0:
         return
     idle = world[CAN_MOVE]
@@ -71,17 +74,25 @@ def select_idle(world):
 
 
 class Encounter(World):
-    
+    """State manager for ingame encounters."""
+
     def time_passes(self, dt):
+        """Main loop."""
         move(self, dt)
         select_idle(self)
 
     def add_character(self):
+        """ "Add a character (for testing purposes)."""
         return self.add_entities(
-            {position.x: 25, position.y: 25,
-             velocity.x: 0, velocity.y: 0,
-             run_acceleration: [900]})
+            {
+                position.x: 25,
+                position.y: 25,
+                velocity.x: 0,
+                velocity.y: 0,
+                run_acceleration: [900],
+            }
+        )
 
     def select_character(self, char):
+        """Select a character."""
         self.give(char, {selected: 1})
-    
