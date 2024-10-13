@@ -18,6 +18,10 @@ targets_closest = Component("targets player", dtype=bool)
 health = Component(current=Component("current"), max=Component("max"), name="health")
 touch_damage = Component("touch damage")
 
+angle = Component('angle (radians')
+dist = Component('dist')
+attack = Component(angle=angle, dist=dist, name='attack action')
+
 CAN_MOVE = [position, velocity, run_acceleration, ~move_command]
 
 
@@ -36,6 +40,11 @@ def initiate_movement(world, x, y):
 
 MOVING = [position, velocity, move_command, run_acceleration]
 
+def _attack_if_at_end_of_movement(world, ids, unit_vectors):
+    attacks = world[player].index.intersection(ids)
+    direction = np.atan2(*unit_vectors.values.transpose())
+    for entity, direc in zip(attacks, direction):
+        character_attacks(world, entity, direction)
 
 def move(world, dt):
     """Accelerate commanded units toward target location."""
@@ -48,8 +57,9 @@ def move(world, dt):
             np.linalg.norm(vels.values, axis=-1) * dt)
         posns[passing_point] = tgts[passing_point]
         vels[passing_point] = 0.0
-
-        world.take(posns.index[passing_point], move_command)
+        stopping = posns.index[passing_point]
+        world.take(stopping, move_command)
+        return stopping
 
     moving = world[MOVING]
 
@@ -63,8 +73,10 @@ def move(world, dt):
     unit_vectors = diffs / distances
     velocities += unit_vectors * acceleration.values[..., np.newaxis] * dt
     positions += velocities * dt
-    _stop_at_target(positions, velocities, targets, distances)
+    stopping = _stop_at_target(positions, velocities, targets, distances)
     world.update({position: positions, velocity: velocities})
+    if len(stopping):
+        _attack_if_at_end_of_movement(world, stopping, unit_vectors.loc[stopping])
 
 
 def select_idle(world):
@@ -98,6 +110,11 @@ def enemy_attacks(world, dt):
         if nearest is not None:
             p = nearest
             world.give([e.name], {move_command.x: p[position.x], move_command.y: p[position.y]})
+
+
+def character_attacks(world, character, angle):
+    world.give(character, {attack.angle: angle, attack.dist: 0})    
+
 
 class Encounter(World):
     """State manager for ingame encounters."""
