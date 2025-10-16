@@ -44,7 +44,6 @@ def step_impl(context):
         context.window.update(0.1)
 
 
-
 @then(u'the enemy should take damage')
 def step_impl(context):
     assert context.encounter.loc[context.enemy, dc.health.current] < context.prev_health

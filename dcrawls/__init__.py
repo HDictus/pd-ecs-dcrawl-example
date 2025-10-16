@@ -18,8 +18,10 @@ targets_closest = Component("targets player", dtype=bool)
 health = Component(current=Component("current"), max=Component("max"), name="health")
 touch_damage = Component("touch damage")
 
-angle = Component('angle (radians')
+angle = Component('angle (radians)')
 dist = Component('dist')
+turn_speed = Component('turn speed')
+extend_speed = Component('extend speed')
 attack = Component(angle=angle, dist=dist, name='attack action')
 
 CAN_MOVE = [position, velocity, run_acceleration, ~move_command]
@@ -42,9 +44,11 @@ MOVING = [position, velocity, move_command, run_acceleration]
 
 def _attack_if_at_end_of_movement(world, ids, unit_vectors):
     attacks = world[player].index.intersection(ids)
-    direction = np.atan2(*unit_vectors.values.transpose())
+    if len(attacks) == 0:
+        return
+    direction = np.atan2(unit_vectors.values[:, 1], unit_vectors.values[:, 0])
     for entity, direc in zip(attacks, direction):
-        character_attacks(world, entity, direction)
+        character_attacks(world, entity, direc)
 
 def move(world, dt):
     """Accelerate commanded units toward target location."""
@@ -113,8 +117,21 @@ def enemy_attacks(world, dt):
 
 
 def character_attacks(world, character, angle):
-    world.give(character, {attack.angle: angle, attack.dist: 0})    
+    world.give(character, {attack.angle: angle, attack.dist: world.loc[character, size]})    
 
+
+def update_attacks(world, dt):
+    attacking = world[[attack, angle, turn_speed, extend_speed]]
+    if len(attacking) == 0:
+        return
+    diff = np.arccos(np.cos(attacking[attack.angle] - attacking[angle]))
+    turn =  attacking[turn_speed] * dt
+    attacking[angle] += np.sign(diff) * turn
+    stopping = attacking.index[np.abs(diff) < turn]
+    attacking.loc[stopping, angle] = attacking[attack.angle] 
+    attacking[attack.dist] += attacking[extend_speed] * dt
+    world.loc[attacking.index, [attack, angle]] = attacking[[attack, angle]].values
+    world.take(stopping, attack)
 
 class Encounter(World):
     """State manager for ingame encounters."""
@@ -122,6 +139,7 @@ class Encounter(World):
     def time_passes(self, dt):
         """Main loop."""
         enemy_attacks(self, dt)
+        update_attacks(self, dt)
         move(self, dt)
         select_idle(self)
 
@@ -135,7 +153,10 @@ class Encounter(World):
                 velocity.y: 0,
                 run_acceleration: [900],
                 health.max: 10,
-                size: 10,
+                angle: 0.,
+                turn_speed: np.pi * 2,
+                extend_speed: 100,
+                size: 10.,
                 player: True,
                 health.current: 10,
             }

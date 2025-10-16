@@ -1,5 +1,6 @@
 """User interface for the game."""
 import pyglet
+import numpy as np
 
 import dcrawls as dc
 
@@ -21,13 +22,22 @@ class GameWindow(pyglet.window.Window):
     def on_draw(self):
         """Draw on screen."""
         self.clear()
-        radius = 10
+        self.draw_selection()
+        self.draw_characters()
+        self.draw_health()
+        self.draw_attacks()
+        t = pyglet.text.Label(str(self.fps))
+        t.draw()
+    
+    def draw_selection(self):
         selected = self.world[[dc.position, dc.selected, dc.size]]
         for sel in selected.values:
             circle = pyglet.shapes.Circle(
                 x=sel[0], y=sel[1], radius=sel[3] + 2, color=(200, 200, 0)
             )
             circle.draw()
+
+    def draw_characters(self):
         is_enemy = self.world[dc.touch_damage]
         position = self.world[[dc.position, dc.size]]
         for (i, posn) in position.iterrows():
@@ -40,6 +50,8 @@ class GameWindow(pyglet.window.Window):
                 x=posn[0], y=posn[1], radius=posn[2], color=color
             )
             circle.draw()
+
+    def draw_health(self):
         health = self.world[[dc.position, dc.size, dc.health]]
         for i, posn in health.iterrows():
             posn = posn.values
@@ -48,20 +60,44 @@ class GameWindow(pyglet.window.Window):
                 x=posn[0], y=posn[1], radius=posn[2] * ratio, color=(0, 255, 0, 100)
             )
             circle.draw()
-        t = pyglet.text.Label(str(self.fps))
-        t.draw()
+    
+    def draw_attacks(self):
+        attackers = self.world[[dc.attack, dc.position, dc.turn_speed, dc.angle]]
+        if len(attackers) == 0:
+            return
+        p2 = attackers[dc.position]
+        p2[dc.X] += np.cos(attackers[dc.angle]) * 100
+        p2[dc.Y] += np.sin(attackers[dc.angle]) * 100
+        #import pdb; pdb.set_trace()
+        #p2 *= attackers[[dc.attack.dist]].values
+        for i, att in attackers.iterrows():
+            """arc = pyglet.shapes.Arc(
+                x=att[dc.position.x], y=att[dc.position.y],
+                radius=att[dc.attack.dist],
+                start_angle=att[dc.angle],
+                angle=-att[(dc.turn_speed, '')] * 0.1,
+                closed=False
+            )
+            arc.draw()"""
+        
+            line = pyglet.shapes.Line(
+                x=att[dc.position.x], y=att[dc.position.y],
+                x2=p2.loc[i, dc.X], y2=p2.loc[i, dc.Y]
+            )
+            line.draw()
+
 
     def update(self, dt):
         """Update world."""
         if dt > 0:
             self.fps = 1 / dt
         if len(self.world[dc.selected]) > 0:
-            self.time_multiplier = 0.05
+            self.time_multiplier = 0.3
         else:
             self.time_multiplier = 1
         self.world.time_passes(dt * self.time_multiplier)
 
-    # pylint: disable=unused-argument,missing-function-docstring
+    # pylint: disable=u nused-argument,missing-function-docstring
     def on_mouse_press(self, x, y, button=1, modifiers=None):
         dc.initiate_movement(self.world, x, y)
 
