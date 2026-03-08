@@ -128,7 +128,8 @@ def update_attacks(world, dt):
     turn =  attacking[turn_speed] * dt
     attacking[angle] += np.sign(diff) * turn
     stopping = attacking.index[np.abs(diff) < turn]
-    attacking.loc[stopping, angle] = attacking[attack.angle] 
+
+    attacking.loc[stopping, angle] = attacking.loc[stopping, attack.angle].values
     attacking[attack.dist] += attacking[extend_speed] * dt
     world.loc[attacking.index, [attack, angle]] = attacking[[attack, angle]].values
     world.take(stopping, attack)
