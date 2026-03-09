@@ -11,7 +11,7 @@ def test_attack_turns_and_extends():
     dt = 0.1
     world.time_passes(dt)
     assert world.loc[char, dc.angle] == 0 + dt * world.loc[char, dc.turn_speed]
-    assert world.loc[char, dc.attack.dist] == world.loc[char, dc.size] + world.loc[char, dc.extend_speed] *  dt
+    assert world.loc[char, dc.attack_dist] == world.loc[char, dc.size] + world.loc[char, dc.extend_speed] * dt
 
 def test_attack_ends_when_angle_reached():
     world = dc.Encounter()
@@ -22,4 +22,4 @@ def test_attack_ends_when_angle_reached():
     while world.loc[char, dc.angle] < np.pi / 2:
         world.time_passes(dt)
     assert world.loc[char, dc.angle] == np.pi / 2
-    assert char not in world[dc.attack].index
+    assert char not in world[dc.attack_angle].index

@@ -4,7 +4,7 @@ import numpy as np
 
 
 def _in_same_direction(vec1, vec2):
-    return np.allclose(vec1[dc.X] / vec1[dc.Y], vec2[dc.X] / vec2[dc.Y])
+    return np.allclose(vec1[dc.position_x] / vec1[dc.position_y], vec2[dc.position_x] / vec2[dc.position_y])
 
 
 @given("the game is in an encounter")
@@ -29,14 +29,14 @@ def step_impl(context):
 
 @then("the character should run there with increasing speed")
 def step_impl(context):
-    current_position = context.encounter[dc.position].loc[context.selected_character]
+    current_position = context.encounter[[dc.position_x, dc.position_y]].loc[context.selected_character]
     target_position = context.position_pressed
     diff = target_position - current_position
     distance = np.linalg.norm(diff)
     displacementsize = -1
     while distance > 0:
         context.window.update(0.1)
-        new_position = context.encounter[dc.position].loc[context.selected_character]
+        new_position = context.encounter[[dc.position_x, dc.position_y]].loc[context.selected_character]
         displacement = new_position - current_position
         new_displacementsize = np.linalg.norm(displacement)
         diff = target_position - new_position
@@ -58,7 +58,7 @@ def step_impl(context):
 @then("the character should stop at that position")
 def step_impl(context):
     assert np.allclose(
-        context.encounter[dc.position].loc[context.selected_character],
+        context.encounter[[dc.position_x, dc.position_y]].loc[context.selected_character],
         context.position_pressed,
     )
     return
@@ -70,14 +70,14 @@ def step_impl(context):
     context.character2 = context.encounter.add_character()[0]
     context.encounter.give(
         [context.character1, context.character2],
-        {dc.move_command.x: [1000, 1000], dc.move_command.y: [1000, 1000]},
+        {dc.move_x: [1000, 1000], dc.move_y: [1000, 1000]},
     )
     context.window.update(0.1)
 
 
 @when("one of these characaters becomes idle")
 def step_impl(context):
-    context.encounter.take(context.character1, dc.move_command)
+    context.encounter.take(context.character1, dc.move_x, dc.move_y)
     context.window.update(0.1)
 
 
