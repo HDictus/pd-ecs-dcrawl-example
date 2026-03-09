@@ -3,36 +3,53 @@ import numpy as np
 import cProfile
 import pstats
 import io
+import pandas as pd
+import time
 
-def run_benchmark():
+
+def run_benchmark(n_enemies=4, n_characters=2):
     encounter = dc.Encounter()
-    encounter.add_character()
-    encounter.add_character()
-    encounter.add_enemy()
-    encounter.add_enemy()
-    encounter.add_enemy()
-    encounter.add_enemy()
-    for i in range(100):
+    for _ in range(n_characters):
+        encounter.add_character()
+
+    for _ in range(n_enemies):
+        encounter.add_enemy()
+    for i in range(200):
         x, y = np.random.randint(900), np.random.randint(500)
         dc.initiate_movement(encounter, x, y)
         encounter.time_passes(0.01)
     return
 
+# times = {}
+
+# for n_enemies in range(0, 1000, 100):
+#     start = time.time()
+#     run_benchmark(n_enemies=n_enemies)
+#     end = time.time()
+#     times[n_enemies] = end - start
+
+# times = pd.Series(times)
+
 
 pr = cProfile.Profile()
 pr.enable()
 
-my_result = run_benchmark()
+my_result = run_benchmark(n_enemies=4)
 
 pr.disable()
-pr.dump_stats("prof.prof")
+pr.dump_stats("benchmark.prof")
 # Use snakefviz
 s = io.StringIO()
 ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
 ps.print_stats()
 
 with open('stats.tsv', 'w+') as f:
-    f.write(s.getvalue())
+    f.write(s.getvalue().strip())
     
-import pandas as pd
-pd.read_csv("stats.tsv", )
+
+#statsdf = pd.read_csv("stats.tsv", sep='  ', skiprows=[0, 1, 2])
+df = pd.DataFrame(
+    pr.getstats(),
+    columns=['func', 'ncalls', 'ccalls', 'tottime', 'cumtime', 'callers']
+)
+

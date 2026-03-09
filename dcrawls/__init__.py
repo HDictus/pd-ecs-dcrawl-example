@@ -1,6 +1,8 @@
 """Minimalistic dungeon crawler."""
 import numpy as np
-from pd_ecs import Component, World, gets
+from pd_ecs import Component, World
+import pandas as pd
+
 
 X = Component("x (meters)", dtype=np.float32)
 Y = Component("y (meters)", dtype=np.float32)
@@ -93,27 +95,36 @@ def select_idle(world):
     world.give(idle.index.values[:1], {selected: 1})
 
 
+def _sqeuclidean(x):
+    return (x**2).sum(axis=-1)
+
+
+# TODO: keep a kdtree for collision and nearest
 def enemy_attacks(world, dt):
     idle_enemies = world[[targets_closest, ~move_command]]
     enemies = world[[position, touch_damage, size]]
     players = world[[position, player, size, health]]
-    for _, e in enemies.iterrows():
-        nearest = None
-        distance = 1000000
-        for _, p in players.iterrows():
-            diff = e[position] - p[position]
-            dist = np.linalg.norm(diff)
-            in_contact = (dist <= e[size] + p[size]).iloc[0]
-            if in_contact:
-                world.loc[p.name, health.current] -= e[touch_damage].iloc[0] * dt
-            elif e.name in idle_enemies.index:
-                if dist < distance:
-                    distance = dist
-                    nearest = p
+    if len(players) == 0 or len(enemies) == 0:
+        return
+    squaredist = _sqeuclidean(
+        enemies[position].values[:,np.newaxis] - players[position].values[np.newaxis]
+    )
+    in_contact = (squaredist < (
+        enemies[size].values[:, np.newaxis] + players[size].values[np.newaxis]
+    )**2).nonzero()
 
-        if nearest is not None:
-            p = nearest
-            world.give([e.name], {move_command.x: p[position.x], move_command.y: p[position.y]})
+    nearest = players.index[squaredist.argmin(axis=1)]
+    target_positions = players.loc[nearest]
+    world.give(enemies.index, {
+        move_command.x: target_positions[position.x],
+        move_command.y: target_positions[position.y]
+    })
+    contacts = pd.DataFrame({
+        'damage': enemies[touch_damage].values[in_contact[0]],
+        'player': players.index.values[in_contact[1]],
+    })
+    damage = contacts.groupby('player')['damage'].sum() * dt
+    world.loc[damage.index, health.current] -= damage.values
 
 
 def character_attacks(world, character, angle):
@@ -133,6 +144,7 @@ def update_attacks(world, dt):
     attacking[attack.dist] += attacking[extend_speed] * dt
     world.loc[attacking.index, [attack, angle]] = attacking[[attack, angle]].values
     world.take(stopping, attack)
+
 
 class Encounter(World):
     """State manager for ingame encounters."""

@@ -18,8 +18,8 @@ world.loc[[p1, p2], dc.run_acceleration] = [900, 500]
 game = ui.GameWindow(world)
 world.add_enemy()
 s = io.StringIO()
-pr = cProfile.Profile()
-pr.enable()
+# pr = cProfile.Profile()
+# pr.enable()
 
 pyglet.app.run()
 
