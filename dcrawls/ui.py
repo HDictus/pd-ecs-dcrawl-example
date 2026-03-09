@@ -28,9 +28,9 @@ class GameWindow(pyglet.window.Window):
         self.draw_attacks()
         t = pyglet.text.Label(str(self.fps))
         t.draw()
-    
+
     def draw_selection(self):
-        selected = self.world[[dc.position, dc.selected, dc.size]]
+        selected = self.world[[dc.position_x, dc.position_y, dc.selected, dc.size]]
         for sel in selected.values:
             circle = pyglet.shapes.Circle(
                 x=sel[0], y=sel[1], radius=sel[3] + 2, color=(200, 200, 0)
@@ -39,7 +39,7 @@ class GameWindow(pyglet.window.Window):
 
     def draw_characters(self):
         is_enemy = self.world[dc.touch_damage]
-        position = self.world[[dc.position, dc.size]]
+        position = self.world[[dc.position_x, dc.position_y, dc.size]]
         for (i, posn) in position.iterrows():
             posn = posn.values
             if i in is_enemy.index:
@@ -52,7 +52,7 @@ class GameWindow(pyglet.window.Window):
             circle.draw()
 
     def draw_health(self):
-        health = self.world[[dc.position, dc.size, dc.health]]
+        health = self.world[[dc.position_x, dc.position_y, dc.size, dc.current_health, dc.max_health]]
         for i, posn in health.iterrows():
             posn = posn.values
             ratio = posn[3] / posn[4]
@@ -60,29 +60,18 @@ class GameWindow(pyglet.window.Window):
                 x=posn[0], y=posn[1], radius=posn[2] * ratio, color=(0, 255, 0, 100)
             )
             circle.draw()
-    
+
     def draw_attacks(self):
-        attackers = self.world[[dc.attack, dc.position, dc.turn_speed, dc.angle]]
+        attackers = self.world[[dc.attack_angle, dc.attack_dist, dc.position_x, dc.position_y, dc.turn_speed, dc.angle]]
         if len(attackers) == 0:
             return
-        p2 = attackers[dc.position]
-        p2[dc.X] += np.cos(attackers[dc.angle]) * 100
-        p2[dc.Y] += np.sin(attackers[dc.angle]) * 100
-        #import pdb; pdb.set_trace()
-        #p2 *= attackers[[dc.attack.dist]].values
+        p2 = attackers[[dc.position_x, dc.position_y]].copy()
+        p2[dc.position_x] += np.cos(attackers[dc.angle]) * 100
+        p2[dc.position_y] += np.sin(attackers[dc.angle]) * 100
         for i, att in attackers.iterrows():
-            """arc = pyglet.shapes.Arc(
-                x=att[dc.position.x], y=att[dc.position.y],
-                radius=att[dc.attack.dist],
-                start_angle=att[dc.angle],
-                angle=-att[(dc.turn_speed, '')] * 0.1,
-                closed=False
-            )
-            arc.draw()"""
-        
             line = pyglet.shapes.Line(
-                x=att[dc.position.x], y=att[dc.position.y],
-                x2=p2.loc[i, dc.X], y2=p2.loc[i, dc.Y]
+                x=att[dc.position_x], y=att[dc.position_y],
+                x2=p2.loc[i, dc.position_x], y2=p2.loc[i, dc.position_y]
             )
             line.draw()
 
