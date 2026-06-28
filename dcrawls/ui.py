@@ -31,7 +31,7 @@ class GameWindow(pyglet.window.Window):
 
     def draw_selection(self):
         selected = self.world[[dc.position_x, dc.position_y, dc.selected, dc.size]]
-        for sel in selected.values:
+        for sel in selected[[dc.position_x, dc.position_y, dc.selected, dc.size]].values:
             circle = pyglet.shapes.Circle(
                 x=sel[0], y=sel[1], radius=sel[3] + 2, color=(200, 200, 0)
             )
@@ -40,7 +40,7 @@ class GameWindow(pyglet.window.Window):
     def draw_characters(self):
         is_enemy = self.world[dc.touch_damage]
         position = self.world[[dc.position_x, dc.position_y, dc.size]]
-        for (i, posn) in position.iterrows():
+        for (i, posn) in position[[dc.position_x, dc.position_y, dc.size]].iterrows():
             posn = posn.values
             if i in is_enemy.index:
                 color = (255, 0, 0)
@@ -53,7 +53,7 @@ class GameWindow(pyglet.window.Window):
 
     def draw_health(self):
         health = self.world[[dc.position_x, dc.position_y, dc.size, dc.current_health, dc.max_health]]
-        for i, posn in health.iterrows():
+        for i, posn in health[[dc.position_x, dc.position_y, dc.size, dc.current_health, dc.max_health]].iterrows():
             posn = posn.values
             ratio = posn[3] / posn[4]
             circle = pyglet.shapes.Circle(
@@ -68,7 +68,7 @@ class GameWindow(pyglet.window.Window):
         p2 = attackers[[dc.position_x, dc.position_y]].copy()
         p2[dc.position_x] += np.cos(attackers[dc.angle]) * 100
         p2[dc.position_y] += np.sin(attackers[dc.angle]) * 100
-        for i, att in attackers.iterrows():
+        for i, att in attackers[[dc.position_x, dc.position_y]].iterrows():
             line = pyglet.shapes.Line(
                 x=att[dc.position_x], y=att[dc.position_y],
                 x2=p2.loc[i, dc.position_x], y2=p2.loc[i, dc.position_y]

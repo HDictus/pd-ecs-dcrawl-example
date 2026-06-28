@@ -42,12 +42,12 @@ def initiate_movement(world, x, y):
         ]
         + CAN_MOVE
     ]
-
     world.give(will_move.index, {move_x: x, move_y: y})
     world.take(will_move.index, selected)
 
 
 MOVING = [position_x, position_y, velocity_x, velocity_y, move_x, move_y, run_acceleration]
+
 
 def _attack_if_at_end_of_movement(world, ids, unit_vectors):
     attacks = world[player].index.intersection(ids)
@@ -56,6 +56,7 @@ def _attack_if_at_end_of_movement(world, ids, unit_vectors):
     direction = np.atan2(unit_vectors[:, 1], unit_vectors[:, 0])
     for entity, direc in zip(attacks, direction):
         character_attacks(world, entity, direc)
+
 
 def move(world, dt):
     """Accelerate commanded units toward target location."""
@@ -71,8 +72,9 @@ def move(world, dt):
 
     diffs = targets - positions
     distances = np.linalg.norm(diffs, axis=-1)[..., np.newaxis]
+    distances[distances==0]=1
     unit_vectors = diffs / distances
-    velocities += unit_vectors * acceleration[..., np.newaxis] * dt
+    velocities += unit_vectors * np.array(acceleration)[..., np.newaxis] * dt
     positions += velocities * dt
 
     passing_point = distances[..., 0] < (np.linalg.norm(velocities, axis=-1) * dt)
@@ -116,7 +118,7 @@ def enemy_attacks(world, dt):
         enemies[[position_x, position_y]].values[:,np.newaxis] - players[[position_x, position_y]].values[np.newaxis]
     )
     in_contact = (squaredist < (
-        enemies[size].values[:, np.newaxis] + players[size].values[np.newaxis]
+        np.array(enemies[size].values)[:, np.newaxis] + np.array(players[size].values)[np.newaxis]
     )**2).nonzero()
 
     nearest = players.index[squaredist.argmin(axis=1)]
@@ -186,11 +188,11 @@ class Encounter(World):
             }
         )
 
-    def add_enemy(self):
+    def add_enemy(self, x=100, y=100):
         return self.add_entities(
             {
-                position_x: 100,
-                position_y: 100,
+                position_x: x,
+                position_y: y,
                 velocity_x: 0,
                 velocity_y: 0,
                 run_acceleration: [100],

@@ -11,15 +11,16 @@ world = dc.Encounter()
 p1 = world.add_character()[0]
 p2 = world.add_character()[0]
 # TODO: make setting both with list doable - test and implement
-world.loc[[p1, p2], [dc.position_x, dc.position_y]] = [[25, 50], [25, 50]]
+world.loc[[p1, p2], [dc.position_x, dc.position_y]] = [[100, 400], [125, 450]]
 world.loc[[p1, p2], dc.size] = [10, 15]
 world.loc[[p1, p2], dc.run_acceleration] = [900, 500]
 
 game = ui.GameWindow(world)
-world.add_enemy()
+# for i in range(100):
+#     world.add_enemy(x=i, y=i*4)
 s = io.StringIO()
-# pr = cProfile.Profile()
-# pr.enable()
+pr = cProfile.Profile()
+pr.enable()
 
 pyglet.app.run()
 
