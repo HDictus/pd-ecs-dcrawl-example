@@ -1,53 +1,95 @@
-from pd_ecs import System
-import dcrawls as dc
+"""User interface for the game."""
 import pyglet
+import numpy as np
+
+import dcrawls as dc
 
 
-class Window:
+# pylint: disable=abstract-method
+class GameWindow(pyglet.window.Window):
+    """Game window."""
+
+    time_multiplier: float = 1.0
+    fps: int = 0
+    world: dc.Encounter
 
     def __init__(self, world):
-        self.window = pyglet.window.Window(960, 480)
+        super().__init__(960, 480)
+        self.selected = None
         self.world = world
+        pyglet.clock.schedule_interval(self.update, 1 / 800)
 
-        @self.window.event
-        def on_draw():
-            self.world.events.draw(self.window)
-            return
-
-        @self.window.event
-        def on_mouse_press(x, y, button, mod):
-            self.world.events.mouse_pressed(x, y, button)
-            return
-
-        @self.window.event
-        def on_mouse_release(x, y, button, mod):
-            self.world.events.mouse_released(x, y, button)
-            return
-
-        @self.window.event
-        def update(dt):
-            self.world.events.update(dt)
-            return
-
-        pyglet.clock.schedule_interval(update, 1/800)
-
-
-class Render(System):
-
-    filters = dict(
-        has_position=[dc.position])
-
-    fps = 0
-
-    def update(self, dt):
-        self.fps = 1 / dt
-
-    def draw(self, window):
-        window.clear()
-        for posn in self.has_position[dc.position].values:
-            circle = pyglet.shapes.Circle(
-                x=posn[0], y=posn[1],
-                radius=10, color=(255, 255, 255))
-            circle.draw()
+    def on_draw(self):
+        """Draw on screen."""
+        self.clear()
+        self.draw_selection()
+        self.draw_characters()
+        self.draw_health()
+        self.draw_attacks()
         t = pyglet.text.Label(str(self.fps))
         t.draw()
+
+    def draw_selection(self):
+        selected = self.world[[dc.position_x, dc.position_y, dc.selected, dc.size]]
+        for sel in selected[[dc.position_x, dc.position_y, dc.selected, dc.size]].values:
+            circle = pyglet.shapes.Circle(
+                x=sel[0], y=sel[1], radius=sel[3] + 2, color=(200, 200, 0)
+            )
+            circle.draw()
+
+    def draw_characters(self):
+        is_enemy = self.world[dc.touch_damage]
+        position = self.world[[dc.position_x, dc.position_y, dc.size]]
+        for (i, posn) in position[[dc.position_x, dc.position_y, dc.size]].iterrows():
+            posn = posn.values
+            if i in is_enemy.index:
+                color = (255, 0, 0)
+            else:
+                color = (255, 255, 255)
+            circle = pyglet.shapes.Circle(
+                x=posn[0], y=posn[1], radius=posn[2], color=color
+            )
+            circle.draw()
+
+    def draw_health(self):
+        health = self.world[[dc.position_x, dc.position_y, dc.size, dc.current_health, dc.max_health]]
+        for i, posn in health[[dc.position_x, dc.position_y, dc.size, dc.current_health, dc.max_health]].iterrows():
+            posn = posn.values
+            ratio = posn[3] / posn[4]
+            circle = pyglet.shapes.Circle(
+                x=posn[0], y=posn[1], radius=posn[2] * ratio, color=(0, 255, 0, 100)
+            )
+            circle.draw()
+
+    def draw_attacks(self):
+        attackers = self.world[[dc.attack_angle, dc.attack_dist, dc.position_x, dc.position_y, dc.turn_speed, dc.angle]]
+        if len(attackers) == 0:
+            return
+        p2 = attackers[[dc.position_x, dc.position_y]].copy()
+        p2[dc.position_x] += np.cos(attackers[dc.angle]) * 100
+        p2[dc.position_y] += np.sin(attackers[dc.angle]) * 100
+        for i, att in attackers[[dc.position_x, dc.position_y]].iterrows():
+            line = pyglet.shapes.Line(
+                x=att[dc.position_x], y=att[dc.position_y],
+                x2=p2.loc[i, dc.position_x], y2=p2.loc[i, dc.position_y]
+            )
+            line.draw()
+
+
+    def update(self, dt):
+        """Update world."""
+        if dt > 0:
+            self.fps = 1 / dt
+        if len(self.world[dc.selected]) > 0:
+            self.time_multiplier = 0.3
+        else:
+            self.time_multiplier = 1
+        self.world.time_passes(dt * self.time_multiplier)
+
+    # pylint: disable=u nused-argument,missing-function-docstring
+    def on_mouse_press(self, x, y, button=1, modifiers=None):
+        dc.initiate_movement(self.world, x, y)
+
+    # pylint: disable=unused-argument,missing-function-docstring
+    def on_mouse_release(self, *a, **kw):
+        return
